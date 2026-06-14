@@ -1,5 +1,4 @@
-export default async (request, context) => {
-  // CORS preflight
+export default async (request) => {
   if (request.method === "OPTIONS") {
     return new Response(null, {
       status: 204,
@@ -11,43 +10,36 @@ export default async (request, context) => {
     });
   }
 
-  if (request.method !== "POST") {
-    return new Response("Method not allowed", { status: 405 });
-  }
-
   try {
     const body = await request.json();
+    // Clé depuis variable d'environnement Netlify (priorité) ou depuis le body
+    const apiKey = process.env.ANTHROPIC_API_KEY || body.apiKey;
+    if (!apiKey) throw new Error("Clé Anthropic manquante");
+
+    // Retirer apiKey du body avant d'envoyer à Anthropic
+    const { apiKey: _, ...cleanBody } = body;
 
     const response = await fetch("https://api.anthropic.com/v1/messages", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "x-api-key": process.env.ANTHROPIC_API_KEY,
+        "x-api-key": apiKey,
         "anthropic-version": "2023-06-01",
       },
-      body: JSON.stringify(body),
+      body: JSON.stringify(cleanBody),
     });
 
     const data = await response.json();
-
     return new Response(JSON.stringify(data), {
       status: response.status,
-      headers: {
-        "Content-Type": "application/json",
-        "Access-Control-Allow-Origin": "*",
-      },
+      headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" },
     });
   } catch (error) {
     return new Response(JSON.stringify({ error: { message: error.message } }), {
       status: 500,
-      headers: {
-        "Content-Type": "application/json",
-        "Access-Control-Allow-Origin": "*",
-      },
+      headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" },
     });
   }
 };
 
-export const config = {
-  path: "/api/claude",
-};
+export const config = { path: "/api/claude" };
