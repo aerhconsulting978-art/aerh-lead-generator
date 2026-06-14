@@ -115,15 +115,10 @@ async function callClaude({ system, userMsg, useWebSearch = false, maxTokens = 1
     messages: [{ role:"user", content:userMsg }],
   };
   if (useWebSearch) body.tools = [{ type:"web_search_20250305", name:"web_search" }];
-  const res = await fetch("https://api.anthropic.com/v1/messages", {
+  const res = await fetch("/api/claude", {
     method:"POST",
-    headers:{
-      "Content-Type":"application/json",
-      "x-api-key": key,
-      "anthropic-version": "2023-06-01",
-      "anthropic-dangerous-direct-browser-access": "true",
-    },
-    body: JSON.stringify(body),
+    headers:{ "Content-Type":"application/json" },
+    body: JSON.stringify({...body, apiKey: key}),
   });
   if (!res.ok) {
     const err = await res.json().catch(()=>({}));
@@ -137,18 +132,10 @@ async function callClaude({ system, userMsg, useWebSearch = false, maxTokens = 1
 async function sendViaResend({ to, subject, html }) {
   const key = localStorage.getItem("aerh_resend_key") || "";
   if (!key) throw new Error("Clé Resend manquante — configurez-la dans ⚙️ Paramètres");
-  const res = await fetch("https://api.resend.com/emails", {
+  const res = await fetch("/api/resend", {
     method:"POST",
-    headers:{
-      "Content-Type":"application/json",
-      "Authorization":`Bearer ${key}`,
-    },
-    body: JSON.stringify({
-      from: "Eric ASPINAS <contact@groupeaerhpolynesie.com>",
-      to: [to],
-      subject,
-      html,
-    }),
+    headers:{ "Content-Type":"application/json" },
+    body: JSON.stringify({ to, subject, html }),
   });
   if (!res.ok) {
     const err = await res.json().catch(()=>({}));
