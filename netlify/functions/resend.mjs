@@ -11,8 +11,9 @@ export default async (request) => {
   }
 
   try {
-    const { to, subject, html } = await request.json();
-    const apiKey = process.env.RESEND_API_KEY;
+    const { to, subject, html, resendKey } = await request.json();
+    // Clé depuis variable d'environnement Netlify (priorité) ou depuis le body
+    const apiKey = process.env.RESEND_API_KEY || resendKey;
     if (!apiKey) throw new Error("Clé Resend manquante");
 
     const response = await fetch("https://api.resend.com/emails", {
