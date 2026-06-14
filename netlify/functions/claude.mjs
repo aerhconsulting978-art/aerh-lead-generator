@@ -12,12 +12,14 @@ export default async (request) => {
 
   try {
     const body = await request.json();
-    // Clé depuis variable d'environnement Netlify (priorité) ou depuis le body
     const apiKey = process.env.ANTHROPIC_API_KEY || body.apiKey;
     if (!apiKey) throw new Error("Clé Anthropic manquante");
 
-    // Retirer apiKey du body avant d'envoyer à Anthropic
     const { apiKey: _, ...cleanBody } = body;
+
+    // Timeout 25 secondes côté fetch pour éviter le 504 Netlify
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 25000);
 
     const response = await fetch("https://api.anthropic.com/v1/messages", {
       method: "POST",
@@ -27,7 +29,10 @@ export default async (request) => {
         "anthropic-version": "2023-06-01",
       },
       body: JSON.stringify(cleanBody),
+      signal: controller.signal,
     });
+
+    clearTimeout(timeout);
 
     const data = await response.json();
     return new Response(JSON.stringify(data), {
@@ -35,7 +40,10 @@ export default async (request) => {
       headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" },
     });
   } catch (error) {
-    return new Response(JSON.stringify({ error: { message: error.message } }), {
+    const msg = error.name === "AbortError"
+      ? "Délai dépassé — la recherche web prend trop de temps. Essayez une requête plus courte."
+      : error.message;
+    return new Response(JSON.stringify({ error: { message: msg } }), {
       status: 500,
       headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" },
     });
