@@ -135,7 +135,7 @@ async function sendViaResend({ to, subject, html }) {
   const res = await fetch("/api/resend", {
     method:"POST",
     headers:{ "Content-Type":"application/json" },
-    body: JSON.stringify({ to, subject, html }),
+    body: JSON.stringify({ to, subject, html, resendKey: key }),
   });
   if (!res.ok) {
     const err = await res.json().catch(()=>({}));
