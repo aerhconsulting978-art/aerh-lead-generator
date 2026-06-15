@@ -852,6 +852,31 @@ export default function App() {
     if (rk) { setResendKey(rk); setResendKeySaved(true); }
     const ak = localStorage.getItem("aerh_anthropic_key");
     if (ak) { setAnthropicKey(ak); setAnthropicSaved(true); }
+
+    // Lecture des paramètres URL depuis l'artifact Prospect Finder
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("entreprise") || params.get("contact") || params.get("email")) {
+      const besoins = params.get("besoins")
+        ? params.get("besoins").split(",").filter(Boolean)
+        : [];
+      setForm({
+        entreprise:  params.get("entreprise")  || "",
+        contact:     params.get("contact")     || "",
+        poste:       params.get("poste")       || "",
+        email:       params.get("email")       || "",
+        telephone:   params.get("telephone")   || "",
+        secteur:     params.get("secteur")     || "",
+        ile:         params.get("ile")         || "",
+        taille:      params.get("taille")      || "",
+        urgence:     "",
+        budget:      "",
+        besoins,
+        notes:       params.get("notes")       || "",
+      });
+      setTab("form");
+      setStep("form");
+      window.history.replaceState({}, "", window.location.pathname);
+    }
   }, []);
 
   function saveLeads(updated) {
