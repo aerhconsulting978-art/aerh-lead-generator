@@ -103,7 +103,7 @@ const TEMP = {
 };
 
 // ─── CLAUDE API ───────────────────────────────────────────────────────────────
-const ANTHROPIC_KEY = localStorage.getItem("aerh_anthropic_key") || "";
+// Clé gérée via localStorage dans les fonctions
 
 async function callClaude({ system, userMsg, useWebSearch = false, maxTokens = 1500 }) {
   const key = localStorage.getItem("aerh_anthropic_key") || "";
@@ -301,7 +301,7 @@ function RechercheBlock({ onPrefill }) {
       const out = await callClaude({
         system: SYS_RECHERCHE,
         userMsg: `Recherche des prospects pour AERH Polynésie : ${q}\nUtilise la recherche web pour trouver des entreprises réelles et actuelles en Polynésie française.`,
-        useWebSearch: true,
+        useWebSearch: false,
       });
       setResult(out);
     } catch(e) { setError("Erreur : "+e.message); }
